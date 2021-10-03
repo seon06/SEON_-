@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import messagebox
-from tkinter.ttk import Separator
+from tkinter.ttk import Separator,Progressbar
 import os
 import sys
 import requests
@@ -65,9 +65,6 @@ def uc():
     global root
     root.destroy()
     main_page()
-def _gtou(url):
-    url = url.replace('https://drive.google.com/file/d/','').replace('/view','')
-    return 'https://drive.google.com/u/0/uc?id='+str(url)
 def uce():
     global root,p
     if True:
@@ -166,6 +163,33 @@ def select_sm():
     F.pack(fill='x',padx=80)
     f.pack()
     root.mainloop()
+def download_url(url,name):
+    global p
+    dp = Toplevel()
+    dp.title('Download')
+    dp.resizable(False,False)
+    r = requests.get(url)
+    print(r)
+    print(url)
+    open('%s/system/download/%s.jar'%(p,name),'wb').write(r.content)
+
+    print('end')
+def download(name, version, path, version2=None):
+    if name == 'optifine':
+        for i in data['download']['mods']:
+            if i['name'] == 'optifine':
+                f = i['files']
+        for i in f:
+            if i['mc_version'] == version and i['version'] == version2:
+                print(version,version2, '||', i['mc_version'],i['version'])
+                a = messagebox.askyesno(title='Download',message='Optifine-%s_%s을 다운로드 하시겠습니까?'%(version,version2))
+                if a == True:
+                    download_url(i['link'],'optifine')
+                else:
+                    print(False)
+                return
+        print(version,version2, '||', i['mc_version'],i['version'])
+        messagebox.showerror(title='!',message='다운 받을 파일을 선택하세요.')
 
 def select_optifine():
     root = Tk()
@@ -179,15 +203,21 @@ def select_optifine():
     F = Frame(root,bg='white')
     Label(F,text='SEON 간편 설치기',font=('Jua',20),bg='white',fg='blue').pack()
     Separator(F,orient='horizontal').pack(fill='both')
-    L = Listbox(F,selectmode='single',font=('Jua',15))
+    Label(F,text='\nOPTIFINE',font=('Jua',20),bg='white',fg='gray').pack()
+    sc = Scrollbar(F)
+    sc.pack(side='right',fill='y')
+    L = Listbox(F,selectmode='single',font=('Jua',15),yscrollcommand=sc.set)
     for i in data['download']['mods']:
         if i['name'] == 'optifine':
             f = i['files']
     for i in f:
-        L.insert(len(f)-(f.index(i)+1),str(i['mc_version'] if i['mc_version'] != '1.17' else '1.17 ')+' '+i['version'])
-    L.pack(fill='x')
+        L.insert(f.index(i),str(i['mc_version']+' '+i['version']))
+    sc['command']=L.yview
+    L.pack(fill='both',expand=True)
+
+    Button(root,text='DOWNLOAD',command=lambda: download('optifine',L.get(L.curselection()).split(' ')[0],'',version2=L.get(L.curselection()).split(' ')[1] ),image=button_image, bg='white',highlightthickness = 0, borderwidth=0,compound='center',font=('Jua',11)).pack(side='bottom')
     
-    F.pack(fill='x',padx=80)
+    F.pack(fill='both',padx=80,expand=True)
     root.mainloop()
 pyglet.font.add_file('%s/system/Jua-Regular.ttf'%p)
 loading()
